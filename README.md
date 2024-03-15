@@ -10,17 +10,21 @@ Embedded.js, the library that supports the Dropbox Sign iFrame, cannot run from 
 - [Expo CLI](https://docs.expo.dev/more/expo-cli/).
 
 ## How to use
-Install dependencies:
+
+### Install dependencies:
 ```sh
 npm install
 ```
 
-Start the app:
+### Set Up Environment Variables: 
+Create a new file named `.env` in the root of the project and add your Dropbox Sign `API_KEY` and `CLIENT_ID`.
+
+### Start the app:
 ```
 npm start
 ```
 
-If a tunnel is needed, then start with:
+### If a tunnel is needed, then start with:
 ```bash
 expo-cli start --tunnel
 ```
