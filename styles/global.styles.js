@@ -2,9 +2,10 @@ import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
 	buttonContainer: {
-    justifyContent: 'left',
-		flexDirection: 'column',
+    justifyContent: 'space-between',
+		flexDirection: 'row',
     paddingHorizontal: 10,
+    marginVertical: 30
   },
   button: {
 		marginTop: 30,
@@ -23,7 +24,7 @@ const styles = StyleSheet.create({
     alignItems: "left",
     flexDirection: "column",
     marginTop: 30,
-    height: 30,
+    height: 40,
     paddingHorizontal: 10,
 	},
 	signerDetailsWrapper: {
@@ -40,7 +41,10 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     paddingHorizontal: 16,
-	}
+	},
+  signerDetailsLabel: {
+    marginBottom: 3,
+  }
 });
 
 export default styles;

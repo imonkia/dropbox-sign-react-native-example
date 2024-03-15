@@ -1,4 +1,5 @@
-import { Text, View, SafeAreaView, TouchableOpacity, TextInput } from 'react-native';
+import { Text, View, TouchableOpacity, TextInput, Keyboard } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useRef } from 'react';
 import { WebView } from 'react-native-webview';
 import { API_KEY, CLIENT_ID } from '@env';
@@ -27,8 +28,9 @@ const Home = () => {
 	
 	const wbRef = useRef(WebView);
 	
+	// JavaScript containing the Dropbox Sign front-end client code.
 	const script = `
-	window.ReactNativeWebView.postMessage('From webview');
+	window.ReactNativeWebView.postMessage('postMessage from webview');
 	
 	const signDocument = () => {
 		const client = new window.HelloSign({
@@ -38,12 +40,13 @@ const Home = () => {
 		client.open('${signUrl}', {
 			skipDomainVerification: true,
 			container: document.getElementById('esig-container'),
-			allowCancel: true,
-			debut: true,
+			debug: true,
 			testMode: true
 		});
 		
 		client.on('close', data => {
+			// Sending message back to the web app to trigger a reload of the WebView content only.
+			// I.E. "Garbage collection" since the WebView does not reload on state updates.
 			window.ReactNativeWebView.postMessage('reload');
 		});
 
@@ -63,8 +66,10 @@ const Home = () => {
 	signDocument();
 	`
 
+	// Function to handle messages coming from the WebView content.
 	const onMessageHandler = event => {
 		console.log(event.nativeEvent.data);
+		// Where the WebView reload happens.
 		if(event.nativeEvent.data == 'reload') {
 			setTimeout(() => {
 				wbRef.current.reload();
@@ -72,12 +77,17 @@ const Home = () => {
 		};
 	};
 	
+	// Function to handle when "Create Signature Request" button is pressed.
+	// This is where the JS code containing the Dropbox Sign front-end client code is injected into the WebView
+	// to trigger the iframe to open.
 	const handlePress = () => {
 		wbRef.current.injectJavaScript(script);
 		setDisabled(true);
 	};
 
+	// Function to send the request to the API to create a signature request.
 	const createSignatureRequest = async () => {
+		Keyboard.dismiss();
 		if(signerName === '' || signerEmail === '') {
 			alert('Please enter signer details');
 			return;
@@ -94,6 +104,7 @@ const Home = () => {
 			setDisabled(false);
 			setSignerName('');
 			setSignerEmail('');
+			setErrorMessage('');
 			const url = await axios.get(`https://api.hellosign.com/v3/embedded/sign_url/${signId}`, {
 				headers: headers
 			})
@@ -109,21 +120,26 @@ const Home = () => {
 	return (
 		<SafeAreaView style={{ flex: 1 }}>
 			<View style={styles.signerDetailsContainer}>
+				<Text style={styles.signerDetailsLabel}>Enter Name:</Text>
 				<View style={styles.signerDetailsWrapper}>
 					<TextInput
-						placeholder={'Name'}
+						placeholder='Name'
+						placeholderTextColor={'lightgrey'}
 						style={styles.signerDetailsInput}
-						onChangeText={(val) => setSignerName(val)}
+						onChangeText={(val) => {setSignerName(val); errorMessage && setErrorMessage('')}}
 						value={signerName && signerName}
 					/>
 				</View>
+				<Text style={styles.signerDetailsLabel}>Enter Email:</Text>
 				<View style={styles.signerDetailsWrapper}>
 					<TextInput
-						placeholder={'Email'}
+						placeholder='Email'
+						placeholderTextColor={'lightgrey'}
 						style={styles.signerDetailsInput}
-						onChangeText={(val) => setSignerEmail(val)}
+						onChangeText={(val) => {setSignerEmail(val); errorMessage && setErrorMessage('')}}
 						keyboardType="email-address"
 						value={signerEmail && signerEmail}
+						onSubmitEditing={Keyboard.dismiss}
 					/>
 				</View>
 			</View>
@@ -133,7 +149,20 @@ const Home = () => {
 						Create Signature Request
 					</Text>
 				</TouchableOpacity>
+					<TouchableOpacity style={styles.button} onPress={handlePress} disabled={disabled}>
+						{disabled
+						?
+						<Text style={[styles.buttonText, { opacity: disabled && 0.2}]}>
+							No Document Available
+						</Text>
+						:
+						<Text style={styles.buttonText}>
+							Open Document to Sign
+						</Text>
+						}
+					</TouchableOpacity>
 			</View>
+			{errorMessage !== '' && alert(errorMessage)}
 			<WebView
 				ref={wbRef}
 				javaScriptEnabled={true}
@@ -142,16 +171,6 @@ const Home = () => {
 				webviewDebuggingEnabled={true}
 				onMessage={onMessageHandler}
 			/>
-			<View style={[styles.buttonContainer, { flexDirection: 'row', justifyContent: 'center' }]}>
-				{!disabled &&				
-					<TouchableOpacity style={styles.button} onPress={handlePress}>
-						<Text style={styles.buttonText}>
-							Open Document to Sign
-						</Text>
-					</TouchableOpacity>
-				}
-				{errorMessage && <Text style={{ color: 'red' }}>{errorMessage}</Text>}
-			</View>
 		</SafeAreaView>
 		)
 }
