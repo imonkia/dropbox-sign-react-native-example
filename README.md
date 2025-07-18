@@ -1,5 +1,5 @@
 # Dropbox Sign React Native App
-React Native app example using the [hellosign-embedded](https://github.com/hellosign/hellosign-embedded) library.
+React Native app which uses the [hellosign-embedded](https://github.com/hellosign/hellosign-embedded) library.
 
 Embedded.js, the library that supports the Dropbox Sign iFrame, cannot run from inside a native app. The current recommendation is to use a WebView to open the Dropbox Sign iFrame.
 
